@@ -1,0 +1,345 @@
+---
+title: "IDS Assignment 2"
+author: "Manan Bhatia"
+date: '2022-09-29'
+output:
+  word_document: default
+  html_document: default
+---
+
+DECLARATION:
+
+The following declaration must be included in a clearly visible and readable place on the first page of
+the report.
+——————————————————————
+By including this statement, we the authors of this work, verify that:
+• I hereby certify that no part of this assignment/product has been copied from any other student’s
+work or from any other source except where due acknowledgement is made in the assignment.
+• No part of this assignment/product has been written/produced for us by another person except
+where such collaboration has been authorised by the subject lecturer/tutor concerned.
+• I am aware that this work may be reproduced and submitted to plagiarism detection software
+programs for the purpose of detecting possible plagiarism (which may retain a copy on its database
+for future plagiarism checking).
+• I hereby certify that we have read and understand what the School of Computer, Data and
+Mathematical Sciences defines as minor and substantial breaches of misconduct as outlined in the
+learning guide for this unit.
+——————————————————————
+
+Question 01 – Data Visualisation:
+
+Use appropriate data visualization techniques and comment on the association of the price of King County houses with other characteristics of the house. 
+
+
+```{r}
+house2=read.csv("kc_house2.csv", header = TRUE)
+attach(house2)
+dim(house2)
+names(house2)
+View(house2)
+head(house2)
+str(house2)
+```
+
+```{r}
+valueprice= as.character(house2$price_cat)
+valueprice[valueprice == "high"] = 1
+valueprice[valueprice == "low"] = 0
+valueprice= as.numeric(valueprice)
+head(valueprice)
+
+newhouse2 = data.frame(house2[,c(-1, -10)], valueprice = as.factor(valueprice))
+head(newhouse2)
+```
+
+```{r}
+pairs(newhouse2, panel=panel.smooth)
+pairs(newhouse2 [,2:6])
+```
+
+```{r}
+boxplot(house2 [,2:6])
+```
+
+For the matrix plot, the price_cat sub data which is part of house2 data, is a categorical variable. The categorical variable is then changed into a numerical variable. So, from changing "low" and "high" to "0" and "1" respectively. A box plot is also plotted for comparison between it and the matrix plot.
+
+Looking at both plots, I believe that the matrix plot is appropriate because the box plot has very low outcomes and the matrix plot is more accurate and more readable.
+
+The price_cat associating with other variables in the house2 dataset shows that the matrix correlation goes up with some association, while the other association of the matrix correlation goes down.
+
+Question 02 – Principal Component Analysis:
+
+a) Calculate the mean and the variance for each appropriate variable and discuss if
+   scaling is necessary and justify your findings. 
+   
+```{r}
+sapply(house2[,2:6], mean)
+```
+It can be seen that the variables have different means. We can see that the bathrooms and sqft_living and bedrooms have quite similar variable, whereas sqft_lot has a big mean and the floors has a small mean variable.
+
+
+```{r}
+sapply(house2[,2:6], var)
+```
+It can be seen that the variables have different variances. We can see that sqft_lot has a large variance variable whereas bedrooms, bathrooms, sqft_living and floors have small variances.
+
+
+Between the mean and the variance, there is a significant difference in the ranges, therefore this data requires scaling.
+
+b) Perform a Principal Component Analysis and give the principal component
+   loadings.
+   
+```{r}
+pr.out = prcomp(house2[,2:6], scale. = TRUE)
+```
+
+```{r}
+pr.out$center
+```
+
+This gives the means of the original variables
+```{r}
+pr.out$scale
+```
+This gives the standard deviances of the original variables.
+
+
+```{r}
+pr.out$rotation
+```
+
+This gives the principal component loading vectors. Each column contains corresponding principal component loading vector. It can be seen that there are four principal components. There are almost equal contributions between sqft_living and bathrooms to PC1. Major contribution for PC2 given by sqft_lot. 
+
+```{r}
+head(pr.out$x)
+```
+
+
+c) Explain the proportion of variance explained by each principal component using a
+   graph.
+
+PC1 =  -0.47121144*bedrooms - 0.57146349*bathrooms - 0.56225205*sqft_living + 0.08949624*sqft_lot - 0.35672443*floors
+
+PC2 = -0.13758239*bedrooms - 0.04476012*bathrooms - 0.05880938*sqft_living - 0.98269541*sqft_lot + 0.09959320*floors
+
+PC3 = 0.45156575*bedrooms + 0.02963463*bathrooms + 0.11760910*sqft_living - 0.15972133*sqft_lot - 0.86940632*floors
+
+PC4 = -0.7449698*bedrooms + 0.37593987*bathrooms + 0.44881200*sqft_living + 0.02803196*sqft_lot - 0.31855440*floors
+
+PC5 = -0.012038809*bedrooms + 0.727473034*bathrooms - 0.682019041*sqft_living + 0.001860162*sqft_lot - 0.074058213*floors
+
+
+```{r}
+summary(pr.out)
+```
+
+It can be seen that the first principal component explains about 50% of the variation in the data, the next principal component explains about 20% of the variation in the dataset, the next principal component explains about 17% of the variation in the dataset, the next one explains about 9.3% of the variation in the dataset and the last principal component explains about 4% of the variation in the dataset.
+
+```{r}
+pr.out$sdev
+```
+This gives the standard deviation of each principal component.
+
+
+```{r}
+pr.var = pr.out$sdev^2
+pr.var
+```
+This gives the variance of each principal component.
+
+
+```{r}
+pve = pr.var/sum(pr.var)
+pve
+```
+
+This gives the propotion of variance explained by each principal component.
+
+```{r}
+plot(pve,xlab="Principal Component",ylab="Proportion of Variance Explained",
+ylim = c(0,1), type = 'b')
+```
+
+```{r}
+plot(cumsum(pve),xlab="Principal Component",ylab="Cumulative Proportion of Variance Explained",
+ylim = c(0,1), type = 'b')
+
+```
+
+d) Write the first two principal components in terms of the original variables in the given dataset.
+
+```{r}
+pr.out
+```
+```{r}
+head(pr.out$x)
+```
+
+PC1 = 50%
+
+PC2 = 19.8%
+
+e) Construct the Biplot and interpret it
+
+```{r}
+pr.out$rotation = -pr.out$rotation
+pr.out$x = -pr.out$x
+biplot(pr.out, scale = 0)
+```
+
+Question 03 - Clustering
+
+a) Cluster the 340 houses in King County in the given dataset into 2 groups using k-means clustering
+
+```{r}
+km.out = kmeans(house2[,2:6], 2, nstart=20)
+km.out$cluster
+km.out
+```
+
+
+b) Visually display the clusters using the first two principal components (PCs). 
+
+```{r}
+pp = prcomp(house2[,2:6], scale =TRUE)
+plot(pp$x[,1:2], col=fitted(km.out, "classes")+1, xaxt="n", yaxt="n")
+```
+
+
+c) Cluster the 340 houses in King County in the given dataset into 2 groups using hierarchical clustering. Consider Euclidean distance as the dissimilarity measure and the closest distance between two clusters as the maximum distance between them.
+
+```{r}
+hc.complete = hclust(dist(house2[,2:6]), method = "complete")
+hc.complete
+```
+
+
+d) Cluster the 340 houses in King County in the given dataset into 2 groups using hierarchical clustering. Consider Euclidean distance as the dissimilarity measure and the closest distance between two clusters as the average distance between them.
+
+```{r}
+hc.average = hclust(dist(house2[,2:6]), method = "average")
+hc.average
+```
+
+
+e) Cluster the 340 houses in King County in the given dataset into 2 groups using hierarchical clustering. Consider Euclidean distance as the dissimilarity measure and the closest distance between two clusters as the minimum distance between them.
+
+
+```{r}
+hc.single = hclust(dist(house2[,2:6]), method = "single")
+hc.single
+```
+
+f) Visually display the clusters obtained in part c, d and e using the first two principal components (PCs). 
+
+```{r}
+par(mfrow = c(1,3))
+plot(hc.complete, main = "Complete Linkage", xlab = "", sub = "", cex = 0.05)
+plot(hc.average, main = "Average Linkage", xlab = "", sub = "", cex = 0.05)
+plot(hc.single, main = "Single Linkage", xlab = "", sub = "", cex = 0.05)
+```
+
+```{r}
+cutree(hc.complete, 2)
+cutree(hc.average, 2)
+cutree(hc.single, 2)
+```
+
+
+g) Compare the results in part b, f and comment on your findings. 
+
+In terms of k-means, the first 6 observations have a mean shift relative to the next 334 observations which also shows that the correlation pushes towards PC1. For the hierarchical data, all three features of complete, average and single linkage generally separate the observations into their correct groups as this proves that PC1 is more favoured than PC2. Therefore, looking at both the plots respectively, we see that the clustering is pushed more towards PC1 and that is why there is more 1s in the dendograms than PC2.
+
+
+Question 04 – Support Vector machines 
+
+a) Divide the dataset into two sets namely training set and test set by assigning 75% of the observations to training set and the rest of the observations to the test set
+
+```{r}
+set.seed(1)
+trid <- sample(1:nrow(house2), nrow(house2)*0.75)
+train <- house2[trid,]
+test <- house2[-trid,]
+```
+
+```{r}
+dim(test)
+dim(train)
+```
+
+
+b)  Fit a support vector classifier, in order to classify whether a house has high or low price.
+
+
+```{r}
+library(e1071)
+svm_fit = svm(formula = valueprice ~ ., data= newhouse2, kernel = "linear", cost = 1, scale = TRUE)
+summary(svm_fit)
+```
+
+```{r}
+set.seed(1)
+tune_out <- tune(svm, valueprice ~ ., data = newhouse2, kernel = "linear", ranges = list(cost = c(0.001, 0.01, 0.1, 1, 10, 100, 1000)), scale= TRUE)
+summary(tune_out)
+```
+
+```{r}
+best_model = tune_out$best.model
+summary(best_model)
+```
+
+
+c) Fit a support vector machine with polynomial basis kernels, in order to classify whether a house has high or low price.
+
+```{r}
+set.seed(1)
+polytune_out = tune(svm, valueprice ~ ., data=newhouse2, kernel = "polynomial", ranges = list(cost = c(0.001, 0.01, 0.1, 1, 10, 100, 1000), d = c(2:5)), scale =TRUE)
+summary(polytune_out)
+```
+```{r}
+polybest_model = polytune_out$best.model
+summary(polybest_model)
+```
+
+
+d) Fit a support vector machine with radial basis kernels, in order to classify whether a house has high or low price.
+
+```{r}
+set.seed(1)
+radtune_out = tune(svm, valueprice ~., data=newhouse2, kernel="radial", ranges = list(cost = c(0.001, 0.01, 0.1, 1, 10, 100, 1000), gamma = c(0.5, 1, 2, 3, 4)), scale= TRUE)
+summary(radtune_out)
+```
+
+```{r}
+radbest_model = radtune_out$best.model
+summary(radbest_model)
+```
+
+e) Comment on the prediction accuracy of the model in part b, c and d. Hence suggest the best model with clear justification. 
+
+
+Comment on Linear Kernel Basis:
+
+The linear model fitted with the cost of 1 and there were 157 support vectors. (78 support vectors are from one class and 79 support vectors are from the other class.)
+
+From the tune_out output,  it can be clearly seen that the optimal value of cost when using 10- fold cross validation is 1 since the error (0.176) is minimum when the cost is 1.
+
+Thus, the optimal model using a linear kernel function can be obtained when cost is 1. The best model thus obtained consists of 157 support vectors with 78 support vectors from one class and 79 support vectors from the other class.
+
+
+
+Comment on Polynomial Kernel Basis:
+
+The polynomial model fitted with the cost of 0.1 and there were 211 support vectors. (106 support vectors are from one class and 105 support vectors are from the other class.)
+
+From the polytune_out output, it can be clearly seen that the optimal value of cost when using 10- fold cross validation is 0.1 since the error (0.191) is minimum when the cost is 0.1.
+
+Thus, the optimal model using a polynomial kernel function can be obtained when cost is 0.1. The best model thus obtained consists of 211 support vectors with 106 support vectors from one class and 105 support vectors from the other class.
+
+
+Comment on Radial Kernel Basis:
+
+The radial model fitted with the cost of 1 and there were 228 support vectors. (108 support vectors are from one class and 120 support vectors from the other class.)
+
+From the radtune_out output, it can be clearly seen than the optimal valuse when using 10- fold cross validation is 1 since the error (0.197) is minimum when the cost is 1.
+
+Thus, the optimal model using a radial kernel function can be obtained when cost is 1. The best model thus obtained consists of 228 support vectors with 108 support vectors from one class and 120 support vectors from the other class.
