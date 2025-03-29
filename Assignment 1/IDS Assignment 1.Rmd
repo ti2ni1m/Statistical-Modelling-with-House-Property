@@ -1,0 +1,497 @@
+---
+title: "IDS Assignment 1"
+author: "Manan Bhatia"
+date: '2022-08-29'
+output:
+  word_document: default
+  html_document: default
+---
+
+Question 1: Regression
+
+1) Construct the matrix plot and correlation matrix (consider only relevant variables). Comment on
+the relationship among variables.
+
+```{r}
+house=read.csv("kc_house.csv",header = TRUE)
+attach(house)
+dim(house)
+names(house)
+View(house)
+head(house)
+```
+
+```{r}
+pairs(house,panel=panel.smooth)
+pairs(house [,1:9])
+```
+The relationship among the variables like the Id, price, bedrooms, bathrooms, sqft_living, sqft_lot, floors, waterfront, sqft_living15 and sqft_lot 15. Between 'id' and 'sqft_living, there is a weak linear relationship which goes in a horizontal straight line. Between the 'price' and 'bedrooms, there is a weak positive linear relationship. And between, 'bedrooms' and 'floors', there is no significant relation ship. And there are many more relationships between two other variables as well.
+
+```{r}
+cor(house)
+```
+```{r}
+cov(house)
+```
+
+  
+
+2) Simple Linear Regresion
+
+  i) Fit a model to predict price in terms of sqft_living. 
+```{r}
+plot(price~sqft_living, xlab=" Square footage of the apartments interior living space in thousand sq.ft", ylab="Price of house in ten thousand dollars", main="Square Foot of living vs Price in $10,000")
+```
+
+  ii) Discuss the significance of the slope parameter estimate. (Write down the relevant
+      hypothesis)
+      
+H0: β = 0 (There is NO linear relationship between X & Y)
+HA: β != 0 (There are some linear relationship between X & Y)
+
+```{r}
+model = lm(price~sqft_living)
+summary(model)
+```
+
+The p-value is 2.2e-16 which is less than 0.05, so there is a strong evidence to reject the null hypothesis at 5% level of significance and support the alternative hypothesis.
+
+
+  iii) Discuss the accuracy of the parameter estimates. (Standard errors/confidence intervals)
+
+```{r}
+confint(model)
+```
+
+The 95% Confidence intervals for the intercepts are between (-47.66432, -20.30013).
+Standard errors for the intercepts is 6.956 units.
+
+The 95% Confidence intervals for the slope (Sqft_Living) are between (46.70061, 55.20429).
+Standard errors for the slope (Sqft_Living) is 2.162 units.
+
+  iv)Discuss the model accuracy. (R-squared, residual standard error etc.)
+
+```{r}
+anova(model)
+```
+
+Sum Square of the slope is 1351998 and the residual of the sum square is 824891
+R^2 = 1351998/1351998 + 824891 = 1351998/2176889 = 0.6211
+
+So 62.11% variation in the price is explained by regression.
+
+The estimated V(Y) is σ^2 = 2433 and so the σ is the square root of 2433 which is 49.33
+
+
+  v) Check for the model assumptions.
+
+```{r}
+par(mfrow=c(2,2))
+plot(model)
+```
+
+Graph 1:
+The plot seems to be scattered at first, so the constant variance assumption is met.
+
+Graph 2:
+The plot seems to be in a straight line, so the  normality assumption is met.
+
+Graph 3:
+Same as Graph 1
+
+Graph 4:
+There are number of influential observations such as 168, 28 and 128.
+
+  vi) Write down the model equation.
+The estimated linear model Y = α + βX
+
+So,
+```{r}
+lm(price~sqft_living)
+```
+Therefore, the equation is price = -33.98 + 50.95sqft_living
+Where α (intercept) is -33.98 and β (slope) is 60.95 and X is sqft_living and Y is price.
+
+```{r}
+plot(price~sqft_living, xlab=" Square footage of the apartments interior living space in thousand sq.ft", ylab="Price of house in ten thousand dollars", main="Square Foot of living vs Price in $10,000")
+abline(a=-33.98, b=50.95)
+```
+
+  vii) Predict the price of a house with 10, 000 sq.ft of the apartments interior living space
+      (sqft_living).
+
+```{r}
+predict(model, list(sqft_living = 10000))
+```
+
+
+3) Multiple Linear Regression
+  i) Fit a model to predict price in terms of all the other quantitative predictors (numerical
+     predictors)
+
+```{r}
+model2=lm(price~sqft_living+sqft_lot+floors+bedrooms+bathrooms)
+summary(model2)
+```
+  ii)Remove the insignificant variables and fit a model including the rest of the variables.
+
+```{r}
+model3=lm(price~floors+bedrooms+bathrooms)
+summary(model3)
+```
+I removed square foot of interior living and square foot of land space.
+
+  iii) Add the interaction term bedrooms*floors to the model above.
+
+```{r}
+multimodel=lm(price~floors+bedrooms+bathrooms+floors*bedrooms)
+summary(multimodel)
+```
+R^2 = 45.26%
+The interaction is slightly significant.
+
+  iv) Comment on the significance of the parameter estimates of the model above.
+
+H0: βi = 0  (There is NO linear relationship between X & Y)
+HA: βi != 0  (There are some linear relationship between X & Y)
+
+```{r}
+summary(multimodel)
+```
+Since the p-value is 2e-16, which less than 0.05, so there is enough evidence to reject the null hypothesis at 5% level. 
+
+So the parameter is slightly significant 
+
+And:
+α (intercept) = 59.707
+β (slope1) = -53.177
+  (slope2) = -26.122
+  (slope3) = 50.572
+  (slope4) = 18.903
+
+The equation is:
+
+price = 59.707 - 53.177floors - 26.122bedrooms + 50.572bathrooms + 18.903floors*bedrooms
+
+
+  v) Check for the model assumptions.
+```{r}
+par(mfrow=c(2,2))
+plot(multimodel)
+```
+  
+Graph 1: 
+This plot shows a negative linear regression which shows pattern in the resdiual impling that the pattern in the dataset is captured by the model.
+
+Graph 2: 
+This plot shows whether or not the standardized residuals follow a normal distribution. It can be seen clealy from the graph that the standardized residuals deviate from the normal distribution since the data points do not lie on the straight line.
+
+Graph 3:
+This plot shows that the residual variance is constant.
+
+Graph 4:
+This plot depicts some outliers.
+
+
+  vi) Compare and comment on the accuracy of the models in part ii and part iii. Suggest the best model.
+
+Part ii accuracy:
+```{r}
+anova(model3)
+```
+
+
+Part iii accuracy:
+```{r}
+anova(multimodel)
+```
+
+The sum square of all slopes for part ii are 304163, 195453 and 447619 respectively and its residuals is 1229654.
+Whereas, the sum square of all slopes for part iii are 304163, 195453, 447619 and 37951 respectively and its residuals is 1191703.
+
+So the best accuracy of the model is part iii because, it has an extra interaction and that there is a perefect linear regression.
+
+
+  vii) Fit a polynomial regression model to predict price using sqft_living of order 2 and test the
+       model significance.
+       
+```{r}
+polymodel = lm(price~sqft_living+I(sqft_living*sqft_living))
+summary(polymodel)
+```
+Using the hypothesis test used in part iv, it is shown that the variable with order 2 are not significant. Hence, they can be removed from the model. This nonlinear regression model is not adequate.
+
+
+
+
+Question 2: Classification
+
+1) Logistic Regression
+
+  i) Construct Logistic regression model for “price_cat” in terms of all the other variables (Use training dataset).
+
+
+Starting from here, I set up a seed to 100 and the set both the train set and test set.
+
+```{r}
+price_cat = ifelse(price > median(price), "High","Low")
+str(price_cat)
+```
+
+
+Here, I added a new variable called price_cat and assigned many values as Low or High.
+```{r}
+price_cat=as.factor(price_cat)
+str(price_cat)
+```
+I added the new variable in the house data.
+```{r}
+Newhouse=data.frame(house,price_cat)
+head(Newhouse)
+```
+
+```{r}
+newhouse=Newhouse[,-2]
+names(newhouse)
+dim(newhouse)
+```
+
+```{r}
+set.seed(100)
+tr = sample(1:nrow(newhouse), nrow(newhouse)*0.75) #to divide the dataset into training and test set (50/50)\
+price_train= price_cat[tr ]
+price_test=price_cat[-tr]
+train = newhouse[tr, ] #defining training dataset
+dim(train)
+test = newhouse[-tr, ] #defining testing dataset
+dim(test)
+```
+
+Then, I removed the original price variable from this dataset.
+
+
+I tried finding the logistic regression by doing:
+
+```{r}
+model4<-glm(price_cat~.,data=newhouse,family = binomial)
+summary(model4)
+```
+
+
+```{r}
+model4.5<-glm(price_cat~sqft_living+sqft_living15+waterfront+sqft_lot15,data=train,family = binomial)
+summary(model4.5)
+```
+
+```{r}
+model5<-glm(price_cat~sqft_living+sqft_living15+waterfront+sqft_lot15,data=test,family = binomial)
+summary(model5)
+```
+
+
+  ii) Comment on the significance of the parameter estimates.
+  
+For Model4.5:
+
+H0: β = 0
+HA: β != 0
+
+Since the p-values of sqft_living, waterfront, sqft_living15 and sqft_lot15 are less than 0.05, there is enough evidence to reject the null hypothesis at 5% level of significance.
+
+P(X) = e^α+βX/ 1+e^α+βX
+
+α = -10.43
+β = -48.19 + -81.16 + 42.08 + 14.61 + 19.68 +65.86 + 25.92 + 20.25 + -81.67/9 = -2.51
+
+So P(X) = e^-10.43 -2.51x/1+e^-10.43-2.51x
+
+This shows that the estimated parameters is just 0 when x= 87. The numbers decreasing if x is less than 87.
+
+
+  iii) Improve the model based on the output in part i. (Hint: Consider the
+       significance of the parameter estimates).
+       
+By improving the model, is to remove the unwanted variables which have the p-value above 0.05. Between model4 and model4.5, model4.5 set is a better data than model 4 is because the null deviance is 353.19 compared to the bigger 472.72 in model4. The deviance residual for model4.5 is 177.25 and model4 is 234.71. The AIC for model4.5 is 187.25 whereas for model4, it is 254.71. And the Fisher Scoring for both models is 7. Overall, the best model is model4.5 because the AIC, the null and residual deviances have a lower numbers than model4 which makes the logistic regression better and more improved. Between Model4 and Model4.5, the variables I removed were id, bedrooms
+
+
+
+
+
+
+  iv) Predict the outputs for the test dataset using the model in part iii and construct misclassification table.
+
+
+The prediction probability and class of the outputs for the newhouse data set using model4.5:  
+```{r}
+pred_prob <- predict(model4.5, type="response")
+head(pred_prob)
+```
+Train DATASET:
+```{r}
+pred_class <- rep("Low", 341)
+pred_class[pred_prob>0.5]="High"
+head(pred_class)
+```
+
+Missclassification Table or Missclassification Matrix:
+
+```{r}
+table(pred_class,price_cat)
+```
+
+
+  v) Calculate the misclassification rate. (Use test dataset).
+  
+```{r}
+Misclassification <- (79+92)/(79+79+91+92)
+Misclassification
+```
+The missclassification rate is 50.01% (train dataset)
+
+```{r}
+FPM <- (79)/(91+79)
+FPM
+```
+The false positive rate is 46.47% (train dataset)
+
+```{r}
+FNM <- (92)/(92+79)
+FNM
+```
+The false negative rate is 53.80% (train dataset)
+
+Using the test DATASET:
+```{r}
+pred_prob2 <- predict(model5, type="response")
+head(pred_prob2)
+```
+
+```{r}
+pred_class2 <- rep("Low", 341)
+pred_class2[pred_prob2>0.5]="High"
+head(pred_class2)
+```
+Missclassification table:
+
+```{r}
+table(pred_class2,price_cat)
+```
+
+
+```{r}
+Misclassification2 <- (101+85)/(69+85+101+86)
+Misclassification2
+```
+The Missclassification rate is 54.55% (test dataset)
+
+```{r}
+FPM2 <- (101)/(69+101)
+FPM2
+```
+
+The false positive rate is 59.41% (test dataset)
+
+```{r}
+FNM2 <- (85)/(85+86)
+FNM2
+```
+The false negative rate is 49.71% (test dataset)
+
+
+
+2) Decision Tree
+  i) Build a classification tree model for the training dataset
+  
+```{r}
+library(ISLR)
+library(tree)
+```
+
+
+```{r}
+house_tree <- tree(price_cat~., train)
+house_tree
+plot(house_tree)
+text(house_tree, pretty = 0)
+```
+
+```{r}
+summary(house_tree)
+```
+
+  ii) Use cross-validation and choose the best size for the tree in part i.
+  
+```{r}
+set.seed(3)
+cv_house = cv.tree(house_tree, FUN=prune.misclass)
+cv_house
+```
+
+```{r}
+plot(cv_house$size, cv_house$dev, type="b")
+```
+
+Pruning will not improve the model. The best size is 8 which is the current size of the tree fitted for the training dataset.
+
+  iii) Build the tree with the best size (pruning) obtained in part ii. 
+  
+```{r}
+prune <-prune.misclass(house_tree, best=8)
+prune
+```
+
+```{r}
+plot(prune)
+text(prune)
+```
+
+  iv)  Predict the outputs for the test dataset using the model in part iii and construct misclassification table.
+  
+
+```{r}
+tree_pred = predict(prune, test, type='class')
+length(tree_pred)
+length(price_test)
+length(price_train)
+tree_pred
+table2 = table(tree_pred, price_test)
+table2
+```
+`
+  v) Calculate the misclassification rate. (Use test dataset).
+  
+TEST SET:
+
+```{r}
+Misclassification3 <- (table2[1,2]+table2[2,1])/sum(table2)
+Misclassification3
+```
+The Missclassification rate is 22.09% (test set)
+
+False Positive Rate (test set):
+
+```{r}
+FPM3 <- (34)/(4+34)
+FPM3
+```
+
+The false positive rate is 89.47% (test set).
+
+False Negative Rate (test set):
+
+```{r}
+FNM3 <- (33)/(33+15)
+FNM3
+```
+
+The false negative rate is 68.75%
+
+
+3) Compare the models in part 1) and part 2) and suggest the best model. (Give reasons).
+
+
+ANSWER:
+The model in Part 1 is the logistic regression model and Part 2 is the Decision Tree model. The Residual Deviance for the logistic regression model (model4.5) is 177.25 whereas for the decision tree model is 0.4613 (house_tree). So therefore, in terms of which model is the best, we have to see which one has a lower residual deviance. And the model that has a lower residual deviance is the decision tree model which is "house_tree".
+
+
+
